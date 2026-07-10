@@ -1,7 +1,7 @@
 // ================= بيانات الترجمة =================
 const translations = {
     ar: {
-        title: "داشبورد المزرعة",
+        title: "المزرعة الذكية",
         section1: "بيانات الطيور والبيئة",
         birdsCount: "عدد الطيور",
         birdsAge: "عمر الطيور (يوم)",
@@ -32,6 +32,7 @@ const translations = {
         rTargetWeight: "الوزن المستهدف",
         rTimerDur: "زمن الدورة",
         rTotalWeight: "الوزن الحي الكلي",
+        rAirSpeed: "سرعة الهواء",
         rAirPerKg: "احتياج الكيلو هواء",
         rTotalAir: "الهواء الكلي المطلوب",
         rOnRatio: "نسبة التشغيل",
@@ -47,12 +48,14 @@ const translations = {
         unitKg: "كجم",
         unitG: "جم",
         unitSec: "ث",
+        unitMSec: "م/ث",
         unitM3: "م³/ساعة",
         unitM3Kg: "م³/كجم",
-        unitM2: "م²"
+        unitM2: "م²",
+        dangerMsg: "تحذير خطير: قدرة الشفاطات لا تغطي احتياج الطيور! ننصح بزيادة عدد الشفاطات في أسرع وقت لتجنب اختناق القطيع."
     },
     en: {
-        title: "Farm Dashboard",
+        title: "Smart Farm",
         section1: "Birds & Env",
         birdsCount: "Total Birds",
         birdsAge: "Age (Days)",
@@ -83,6 +86,7 @@ const translations = {
         rTargetWeight: "Target Weight",
         rTimerDur: "Cycle Time",
         rTotalWeight: "Total Live Weight",
+        rAirSpeed: "Air Speed",
         rAirPerKg: "Air Needed/Kg",
         rTotalAir: "Total Air Needed",
         rOnRatio: "ON Ratio",
@@ -98,9 +102,11 @@ const translations = {
         unitKg: "Kg",
         unitG: "g",
         unitSec: "s",
+        unitMSec: "m/s",
         unitM3: "m³/h",
         unitM3Kg: "m³/Kg",
-        unitM2: "m²"
+        unitM2: "m²",
+        dangerMsg: "CRITICAL WARNING: Fan capacity does not cover birds' needs! Add more fans immediately to prevent flock suffocation."
     }
 };
 
@@ -146,9 +152,20 @@ function applyLanguage(lang) {
     document.querySelectorAll('[data-placeholder]').forEach(el => {
         el.placeholder = translations[lang][el.getAttribute('data-placeholder')];
     });
+
+    // التحديث الفوري لرسالة الخطأ إذا كانت معروضة
+    document.getElementById('dangerMsgText').innerText = translations[lang].dangerMsg;
 }
 function hideHint() {
     document.getElementById('fanHint').style.opacity = '0';
+}
+
+// السكرول لكارت التايمر عند الضغط على الرسالة العائمة
+function scrollToTimer() {
+    document.getElementById('timerCardDiv').scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+    });
 }
 
 // ================= الأنيميشن =================
@@ -177,6 +194,7 @@ function animateValue(id, start, end, duration, isFloat = false) {
 
 // ================= عرض الداشبورد =================
 function editData() {
+    document.getElementById('dangerNotification').classList.remove('alert-show');
     document.getElementById('dashboardSection').classList.remove('active-view');
     document.getElementById('dashboardSection').classList.add('hidden-view');
     setTimeout(() => {
@@ -223,29 +241,61 @@ function runCalculationsAndAnimations() {
     outTemp = getVal('outTemp'),
     birdsCount = getVal('birdsCount'),
     avgWeight = getVal('avgWeight');
+    let roomWidth = getVal('roomWidth'),
+    roomHeight = getVal('roomHeight');
 
     let targetTemp = getTargetTemp(age),
     targetHumidity = Math.max(40, Math.min(70, 93 - targetTemp));
     let cycleTime = getTimerDur(age);
-
-    // سحب الوزن المستهدف كنص (String) حسب اليوم
     let targetWeightText = (age < 1 || isNaN(age)) ? "0": weightsDB[Math.min(age-1, weightsDB.length-1)];
 
     let totalLiveWeight = birdsCount * avgWeight,
     airPerKg = outTemp / 4,
     totalAirReq = totalLiveWeight * airPerKg;
     let totalPower = getVal('fansCount') * (getVal('fanCapacity') * 0.8);
+
+    let roomCrossSection = roomWidth * roomHeight;
+    let airSpeed = roomCrossSection > 0 ? totalPower / (3600 * roomCrossSection): 0;
+
     let onRatio = totalPower > 0 ? Math.min(totalAirReq / totalPower, 1): 0,
     offRatio = 1 - onRatio;
     let tOn = cycleTime * onRatio,
     tOff = cycleTime * offRatio;
 
+    // المساحات الأساسية
     let inletArea = ((getVal('inletLength') * getVal('inletWidth')) / 10000) * getVal('inletCount');
     let tunnelArea = ((getVal('tunnelLength') * getVal('tunnelWidth')) / 10000) * getVal('tunnelCount');
-    let inletOpenRatio = inletArea * 14400 > 0 ? Math.min((totalAirReq / (inletArea * 14400)) * 100, 100): 0;
-    let tunnelOpenRatio = tunnelArea * (getVal('padThickness') == 15 ? 7200: 4500) > 0 ? Math.min((totalAirReq / (tunnelArea * (getVal('padThickness') == 15 ? 7200: 4500))) * 100, 100): 0;
 
-    // عرض الوزن المستهدف كنص مباشر بدون أنيميشن رقمي وتعديل حجم الخط ديناميكياً
+    let inletOpenRatio = 0,
+    tunnelOpenRatio = 0;
+
+    if (outTemp <= targetTemp) {
+        if (inletArea * 14400 > 0) inletOpenRatio = Math.min((totalAirReq / (inletArea * 14400)) * 100, 100);
+    } else {
+        let padCapacity = (getVal('padThickness') == 15 ? 7200: 4500);
+        if (tunnelArea * padCapacity > 0) tunnelOpenRatio = Math.min((totalAirReq / (tunnelArea * padCapacity)) * 100, 100);
+    }
+
+    // ================= معالجة حالة الخطر (نقص قدرة الشفاطات) =================
+    const timerCard = document.getElementById('timerCardDiv');
+    const dangerAlert = document.getElementById('dangerNotification');
+    const dangerMsgText = document.getElementById('dangerMsgText');
+
+    if (totalAirReq > totalPower && totalAirReq > 0) {
+        // تشغيل وضع الخطر
+        timerCard.classList.add('danger-mode-card');
+        dangerMsgText.innerText = translations[currentLang].dangerMsg;
+        // إظهار الرسالة العائمة بعد تأخير بسيط لإعطاء تأثير درامي
+        setTimeout(() => {
+            dangerAlert.classList.add('alert-show');
+        }, 600);
+    } else {
+        // إيقاف وضع الخطر
+        timerCard.classList.remove('danger-mode-card');
+        dangerAlert.classList.remove('alert-show');
+    }
+    // =========================================================================
+
     const weightEl = document.getElementById('anim_targetWeight');
     weightEl.innerText = targetWeightText;
     weightEl.style.fontSize = targetWeightText.length > 8 ? "20px": "28px";
@@ -255,6 +305,7 @@ function runCalculationsAndAnimations() {
     animateValue('anim_timerDur', 0, cycleTime, 1500, false);
 
     animateValue('anim_totalWeight', 0, totalLiveWeight, 1800, true);
+    animateValue('anim_airSpeed', 0, airSpeed, 1800, true);
     animateValue('anim_airPerKg', 0, airPerKg, 1800, true);
     animateValue('anim_totalAir', 0, totalAirReq, 2000, false);
 

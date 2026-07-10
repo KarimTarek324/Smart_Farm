@@ -32,7 +32,6 @@
     --accent: #fbbf24;
     --border-color: #334155;
     --input-bg: #0f172a;
-    /* توضيح ألوان الكروت في الدارك مود لتجنب اختفائها */
     --dash-card-1: linear-gradient(135deg, #0284c7, #1e3a8a);
     --dash-card-2: linear-gradient(135deg, #059669, #064e3b);
     --dash-card-3: linear-gradient(135deg, #6d28d9, #4c1d95);
@@ -48,6 +47,7 @@
     margin: 0;
     padding: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    scroll-behavior: smooth;
 }
 body {
     background-color: var(--bg-color);
@@ -90,7 +90,6 @@ body {
     gap: 12px;
 }
 
-/* تعديل شكل الأزرار لتكون أيقونات دائرية مميزة */
 .icon-btn {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
@@ -137,6 +136,99 @@ body {
     100% {
         box-shadow: 0 0 0 0 rgba(14, 165, 233, 0);
     }
+}
+
+@keyframes dangerVibrate {
+    0% {
+        transform: translate(0, 0);
+    }
+    10% {
+        transform: translate(-3px, -1px);
+    }
+    20% {
+        transform: translate(2px, 1px);
+    }
+    30% {
+        transform: translate(-1px, 3px);
+    }
+    40% {
+        transform: translate(3px, -2px);
+    }
+    50% {
+        transform: translate(-2px, 2px);
+    }
+    60% {
+        transform: translate(1px, -3px);
+    }
+    70% {
+        transform: translate(-3px, 1px);
+    }
+    80% {
+        transform: translate(2px, -1px);
+    }
+    90% {
+        transform: translate(-1px, -2px);
+    }
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+@keyframes slideInAlert {
+    0% {
+        transform: translateY(-100px) translateX(-50%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0) translateX(-50%);
+        opacity: 1;
+    }
+}
+
+/* ================= الإشعارات الخطرة ================= */
+.floating-danger-alert {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-200px);
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    color: white;
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: 0 15px 30px rgba(220, 38, 38, 0.5);
+    font-weight: 700;
+    font-size: 15px;
+    z-index: 9999;
+    cursor: pointer;
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    max-width: 90%;
+    width: max-content;
+    text-align: center;
+    border: 2px solid #fca5a5;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.floating-danger-alert.alert-show {
+    transform: translateX(-50%) translateY(0);
+}
+
+.danger-mode-card {
+    background: linear-gradient(135deg, #ef4444, #991b1b) !important;
+    border-color: #ef4444 !important;
+    animation: dangerVibrate 0.25s infinite !important;
+}
+[data-theme="dark"] .danger-mode-card {
+    background: #2d1a1a !important;
+    border-color: #f87171 !important;
+    box-shadow: 0 0 25px rgba(248, 113, 113, 0.3) !important;
+}
+.danger-mode-card h3, .danger-mode-card .detail-label, .danger-mode-card .detail-val {
+    color: #ffffff !important;
+    border-color: rgba(255,255,255,0.3) !important;
+}
+[data-theme="dark"] .danger-mode-card h3, [data-theme="dark"] .danger-mode-card .detail-label, [data-theme="dark"] .danger-mode-card .detail-val {
+    color: #fca5a5 !important;
 }
 
 /* ================= قسم المدخلات ================= */
@@ -276,7 +368,6 @@ html[dir="ltr"] .hint-text {
     color: white;
 }
 
-/* كروت الإحصائيات العلوية */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -335,6 +426,7 @@ html[dir="ltr"] .hint-text {
     align-items: baseline;
     gap: 5px;
     color: #ffffff;
+    transition: font-size 0.3s;
 }
 .stat-unit {
     font-size: 14px;
@@ -342,7 +434,6 @@ html[dir="ltr"] .hint-text {
     font-weight: 500;
 }
 
-/* الكروت التفصيلية */
 .details-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -354,6 +445,7 @@ html[dir="ltr"] .hint-text {
     padding: 22px;
     box-shadow: var(--shadow-md);
     border: 1px solid var(--border-color);
+    transition: background 0.3s, border 0.3s;
 }
 .detail-card h3 {
     color: var(--text-main);
@@ -391,25 +483,17 @@ html[dir="ltr"] .hint-text {
     font-size: 18px;
 }
 
-/* الشبكة المقسمة للفتحات */
 .split-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
 }
 
-/* ================= الميديا كويري (Mobile Fixes) ================= */
+/* ================= الميديا كويري ================= */
 @media (max-width: 768px) {
     .navbar {
         padding: 12px 15px;
     }
-    .navbar h1 {
-        font-size: 16px;
-    }
-    .navbar h1 span:first-child {
-        font-size: 20px !important;
-    }
-
     .dash-header {
         flex-direction: column;
         align-items: stretch;
@@ -418,31 +502,28 @@ html[dir="ltr"] .hint-text {
     .btn-secondary {
         justify-content: center;
     }
-
     .stats-grid {
         grid-template-columns: 1fr 1fr;
     }
-
-    /* كارتين جنب بعض في الموبايل */
     .split-grid {
         grid-template-columns: 1fr;
         gap: 0;
     }
-
-    /* جعل التفاصيل تحت بعضها */
-
     .detail-card {
         padding: 15px;
     }
     .stat-value {
         font-size: 24px;
     }
+    .floating-danger-alert {
+        flex-direction: column;
+        text-align: center;
+        font-size: 13px;
+        padding: 12px;
+    }
 }
-
 @media (max-width: 480px) {
     .stats-grid {
         grid-template-columns: 1fr;
     }
-
-    /* كارت واحد في الشاشات الصغيرة جداً */
 }
