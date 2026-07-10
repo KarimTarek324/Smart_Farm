@@ -1,7 +1,7 @@
 // ================= بيانات الترجمة =================
 const translations = {
     ar: {
-        title: "المزرعة الذكية",
+        title: "داشبورد المزرعة",
         section1: "بيانات الطيور والبيئة",
         birdsCount: "عدد الطيور",
         birdsAge: "عمر الطيور (يوم)",
@@ -45,13 +45,14 @@ const translations = {
         length: "الطول",
         width: "العرض",
         unitKg: "كجم",
+        unitG: "جم",
         unitSec: "ث",
         unitM3: "م³/ساعة",
         unitM3Kg: "م³/كجم",
         unitM2: "م²"
     },
     en: {
-        title: "Smart Fram",
+        title: "Farm Dashboard",
         section1: "Birds & Env",
         birdsCount: "Total Birds",
         birdsAge: "Age (Days)",
@@ -95,6 +96,7 @@ const translations = {
         length: "L",
         width: "W",
         unitKg: "Kg",
+        unitG: "g",
         unitSec: "s",
         unitM3: "m³/h",
         unitM3Kg: "m³/Kg",
@@ -198,7 +200,16 @@ function processDashboard() {
 }
 
 // ================= الحسابات =================
-const weightsDB = [40, 60, 80, 105, 135, 175, 220, 270, 325, 385, 450, 520, 595, 675, 760, 850, 945, 1045, 1150, 1260, 1375, 1495, 1620, 1750, 1885, 2025, 2170, 2320, 2475, 2635, 2800, 2970, 3145, 3325, 3510];
+const weightsDB = [
+    "42 - 45 - 38", "54 - 81", "74 - 99", "94 - 118", "114 - 140",
+    "140 - 160", "179 - 210", "187 - 225", "230 - 259", "255 - 300",
+    "293 - 340", "334 - 382", "378 - 429", "400 - 490", "457 - 509",
+    "510 - 568", "568 - 642", "625 - 705", "687 - 773", "752 - 841",
+    "770 - 1000", "1000 - 1017", "1018 - 1093", "1094 - 1172", "1173 - 1253",
+    "1254 - 1336", "1337 - 1420", "1421 - 1507", "1508 - 1564", "1565 - 1653",
+    "1654 - 1742", "1743 - 1833", "1834 - 1925", "1926 - 2250", "2250 - 2500"
+];
+
 function getTargetTemp(day) {
     if (day <= 1) return 34; if (day <= 5) return 33; if (day <= 8) return 31.5; if (day <= 11) return 30; if (day <= 14) return 28.5; if (day <= 17) return 28; if (day <= 20) return 27; if (day <= 23) return 26; return 25;
 }
@@ -215,8 +226,10 @@ function runCalculationsAndAnimations() {
 
     let targetTemp = getTargetTemp(age),
     targetHumidity = Math.max(40, Math.min(70, 93 - targetTemp));
-    let cycleTime = getTimerDur(age),
-    targetWeight = (age < 1 || isNaN(age)) ? 0: weightsDB[Math.min(age-1, weightsDB.length-1)] / 1000;
+    let cycleTime = getTimerDur(age);
+
+    // سحب الوزن المستهدف كنص (String) حسب اليوم
+    let targetWeightText = (age < 1 || isNaN(age)) ? "0": weightsDB[Math.min(age-1, weightsDB.length-1)];
 
     let totalLiveWeight = birdsCount * avgWeight,
     airPerKg = outTemp / 4,
@@ -232,9 +245,13 @@ function runCalculationsAndAnimations() {
     let inletOpenRatio = inletArea * 14400 > 0 ? Math.min((totalAirReq / (inletArea * 14400)) * 100, 100): 0;
     let tunnelOpenRatio = tunnelArea * (getVal('padThickness') == 15 ? 7200: 4500) > 0 ? Math.min((totalAirReq / (tunnelArea * (getVal('padThickness') == 15 ? 7200: 4500))) * 100, 100): 0;
 
+    // عرض الوزن المستهدف كنص مباشر بدون أنيميشن رقمي وتعديل حجم الخط ديناميكياً
+    const weightEl = document.getElementById('anim_targetWeight');
+    weightEl.innerText = targetWeightText;
+    weightEl.style.fontSize = targetWeightText.length > 8 ? "20px": "28px";
+
     animateValue('anim_targetTemp', 0, targetTemp, 1500, false);
     animateValue('anim_targetHum', 0, targetHumidity, 1500, false);
-    animateValue('anim_targetWeight', 0, targetWeight, 1500, true);
     animateValue('anim_timerDur', 0, cycleTime, 1500, false);
 
     animateValue('anim_totalWeight', 0, totalLiveWeight, 1800, true);
