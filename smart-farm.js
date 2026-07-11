@@ -52,7 +52,8 @@ const translations = {
         unitM3: "م³/ساعة",
         unitM3Kg: "م³/كجم",
         unitM2: "م²",
-        dangerMsg: "تحذير خطير: قدرة الشفاطات لا تغطي احتياج الطيور! ننصح بزيادة عدد الشفاطات في أسرع وقت لتجنب اختناق القطيع."
+        dangerMsg: "تحذير خطير: قدرة الشفاطات لا تغطي احتياج الطيور! ننصح بزيادة عدد الشفاطات في أسرع وقت لتجنب اختناق القطيع.",
+        humWarning: "* الزيادة في الرطوبة عن الحد الأقصى قد تؤدي إلى احتباس حراري"
     },
     en: {
         title: "Smart Farm",
@@ -106,7 +107,8 @@ const translations = {
         unitM3: "m³/h",
         unitM3Kg: "m³/Kg",
         unitM2: "m²",
-        dangerMsg: "CRITICAL WARNING: Fan capacity does not cover birds' needs! Add more fans immediately to prevent flock suffocation."
+        dangerMsg: "CRITICAL WARNING: Fan capacity does not cover birds' needs! Add more fans immediately to prevent flock suffocation.",
+        humWarning: "* Exceeding maximum humidity may lead to heat stress"
     }
 };
 
@@ -153,14 +155,12 @@ function applyLanguage(lang) {
         el.placeholder = translations[lang][el.getAttribute('data-placeholder')];
     });
 
-    // التحديث الفوري لرسالة الخطأ إذا كانت معروضة
     document.getElementById('dangerMsgText').innerText = translations[lang].dangerMsg;
 }
 function hideHint() {
     document.getElementById('fanHint').style.opacity = '0';
 }
 
-// السكرول لكارت التايمر عند الضغط على الرسالة العائمة
 function scrollToTimer() {
     document.getElementById('timerCardDiv').scrollIntoView({
         behavior: 'smooth',
@@ -182,11 +182,11 @@ function animateValue(id, start, end, duration, isFloat = false) {
         const easeOut = 1 - Math.pow(1 - progress, 3);
         let current = easeOut * (end - start) + start;
 
-        obj.innerText = isFloat ? current.toFixed(2): Math.round(current);
+        obj.innerHTML = isFloat ? current.toFixed(2): Math.round(current);
         if (progress < 1) {
             animationFrames[id] = window.requestAnimationFrame(step);
         } else {
-            obj.innerText = isFloat ? end.toFixed(2): Math.round(end);
+            obj.innerHTML = isFloat ? end.toFixed(2): Math.round(end);
         }
     };
     animationFrames[id] = window.requestAnimationFrame(step);
@@ -262,7 +262,6 @@ function runCalculationsAndAnimations() {
     let tOn = cycleTime * onRatio,
     tOff = cycleTime * offRatio;
 
-    // المساحات الأساسية
     let inletArea = ((getVal('inletLength') * getVal('inletWidth')) / 10000) * getVal('inletCount');
     let tunnelArea = ((getVal('tunnelLength') * getVal('tunnelWidth')) / 10000) * getVal('tunnelCount');
 
@@ -276,32 +275,53 @@ function runCalculationsAndAnimations() {
         if (tunnelArea * padCapacity > 0) tunnelOpenRatio = Math.min((totalAirReq / (tunnelArea * padCapacity)) * 100, 100);
     }
 
-    // ================= معالجة حالة الخطر (نقص قدرة الشفاطات) =================
+    // رسالة الخطر
     const timerCard = document.getElementById('timerCardDiv');
     const dangerAlert = document.getElementById('dangerNotification');
     const dangerMsgText = document.getElementById('dangerMsgText');
 
     if (totalAirReq > totalPower && totalAirReq > 0) {
-        // تشغيل وضع الخطر
         timerCard.classList.add('danger-mode-card');
         dangerMsgText.innerText = translations[currentLang].dangerMsg;
-        // إظهار الرسالة العائمة بعد تأخير بسيط لإعطاء تأثير درامي
         setTimeout(() => {
             dangerAlert.classList.add('alert-show');
         }, 600);
     } else {
-        // إيقاف وضع الخطر
         timerCard.classList.remove('danger-mode-card');
         dangerAlert.classList.remove('alert-show');
     }
-    // =========================================================================
 
     const weightEl = document.getElementById('anim_targetWeight');
     weightEl.innerText = targetWeightText;
     weightEl.style.fontSize = targetWeightText.length > 8 ? "20px": "28px";
 
+    // ================= تحديث الرطوبة =================
+    const humEl = document.getElementById('anim_targetHum');
+    const humExtra = document.getElementById('humExtra');
+    const humNote = document.getElementById('humNote');
+
+    if (age <= 15 || isNaN(age)) {
+        // العرض العادي
+        humExtra.style.display = 'none';
+        humNote.style.display = 'none';
+        animateValue('anim_targetHum', 0, targetHumidity, 1500, false);
+    } else {
+        // عرض النطاق والمتوسط بعد عمر 15 يوم
+        let maxHum = Math.round(targetHumidity);
+        let minHum = 40;
+        let avgHum = Math.round((minHum + maxHum) / 2);
+
+        if (animationFrames['anim_targetHum']) cancelAnimationFrame(animationFrames['anim_targetHum']);
+
+        humEl.innerHTML = `<span dir="rtl">${minHum} - ${maxHum}</span>`;
+        humExtra.innerText = currentLang === 'ar' ? `(متوسط ${avgHum})`: `(Avg ${avgHum})`;
+
+        humExtra.style.display = 'inline-block';
+        humNote.style.display = 'block';
+    }
+    // ===============================================
+
     animateValue('anim_targetTemp', 0, targetTemp, 1500, false);
-    animateValue('anim_targetHum', 0, targetHumidity, 1500, false);
     animateValue('anim_timerDur', 0, cycleTime, 1500, false);
 
     animateValue('anim_totalWeight', 0, totalLiveWeight, 1800, true);

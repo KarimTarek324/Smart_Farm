@@ -427,6 +427,7 @@ html[dir="ltr"] .hint-text {
     gap: 5px;
     color: #ffffff;
     transition: font-size 0.3s;
+    flex-wrap: wrap;
 }
 .stat-unit {
     font-size: 14px;
