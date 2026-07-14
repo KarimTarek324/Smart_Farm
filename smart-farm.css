@@ -231,7 +231,8 @@ body {
     color: #fca5a5 !important;
 }
 
-/* ================= قسم المدخلات ================= */
+
+/* ================= قسم المدخلات والأخطاء ================= */
 .section-view {
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -305,6 +306,7 @@ input:focus, select:focus {
     background-color: var(--card-bg);
     outline: none;
 }
+
 .hint-text {
     font-size: 11px;
     color: var(--accent);
@@ -315,6 +317,23 @@ input:focus, select:focus {
 html[dir="ltr"] .hint-text {
     right: auto;
     left: 0;
+}
+
+/* تنسيقات الأخطاء Validation */
+.input-error {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+    background-color: #fef2f2 !important;
+}
+:root[data-theme="dark"] .input-error {
+    background-color: rgba(239, 68, 68, 0.08) !important;
+}
+.error-msg-text {
+    color: #ef4444;
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 6px;
+    animation: fadeInScale 0.3s ease forwards;
 }
 
 .btn-main {
