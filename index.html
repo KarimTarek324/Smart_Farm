@@ -44,7 +44,7 @@
                 <div class="form-group"><label data-i18n="fansCount">عدد الشفاطات الكلي</label><input type="number" id="fansCount"></div>
                 <div class="form-group">
                     <label data-i18n="fanCapacity">قدرة الشفاط (م³/ساعة)</label>
-                    <input type="number" id="fanCapacity" oninput="hideHint()">
+                    <input type="number" id="fanCapacity">
                     <div id="fanHint" class="hint-text" data-i18n="fanHint">*يستخدم 80% من القدرة لتفادي الفقد</div>
                 </div>
             </div>
@@ -67,7 +67,7 @@
                     </div>
                 </div>
                 <div class="form-group"><label data-i18n="tunnelCount">عدد فتحات (Tunnel Doors)</label><input type="number" id="tunnelCount"></div>
-                <div class="form-group">
+                <div class="form-group" style="margin-bottom: 0;">
                     <label data-i18n="padThickness">سمك خلايا التبريد</label>
                     <select id="padThickness">
                         <option value="15" data-i18n="pad15">15 سم</option>
@@ -102,13 +102,20 @@
                     <span class="stat-unit">%</span>
                     <span id="humExtra" style="font-size: 15px; font-weight: 700; margin: 0 6px; display: none; opacity: 0.95;"></span>
                 </div>
-                <div id="humNote" style="font-size: 11.5px; margin-top: 6px; font-weight: 600; color: #ffeb3b; display: none;" data-i18n="humWarning"></div>
+                <div id="humNote" class="yellow-note" data-i18n="humWarning"></div>
+            </div>
+            
+            <div class="stat-card c-bg-5">
+                <div class="stat-title" data-i18n="rDarkness">ساعات الإظلام</div>
+                <div class="stat-value"><span id="anim_darkness">0</span><span class="stat-unit" data-i18n="unitHour">ساعة</span></div>
+                <div id="darknessNote" class="yellow-note" data-i18n="darknessWarning"></div>
             </div>
 
             <div class="stat-card c-bg-3">
                 <div class="stat-title" data-i18n="rTargetWeight">الوزن المستهدف</div>
                 <div class="stat-value"><span id="anim_targetWeight" style="line-height: 1.2;">0</span><span class="stat-unit" data-i18n="unitG">جم</span></div>
             </div>
+            
             <div class="stat-card c-bg-4">
                 <div class="stat-title" data-i18n="rTimerDur">زمن الدورة</div>
                 <div class="stat-value"><span id="anim_timerDur">0</span><span class="stat-unit" data-i18n="unitSec">ثانية</span></div>
